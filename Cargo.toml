@@ -1,0 +1,21 @@
+[package]
+name = "rust-manager"
+version = "0.1.0"
+edition = "2024"   # you can also use 2021 if you prefer
+
+[dependencies]
+axum = "0.8.6"
+hyper = "1.7.0"
+dioxus = { version = "0.6.2", features = ["web"] }
+axum_session = { version = "0.17", features = ["key-store"] }
+axum_session_sqlx = { version = "0.6.0", features = ["sqlite", "tls-rustls"]}
+sqlx = { version = "0.8", features = ["sqlite", "runtime-tokio-native-tls"] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+rust-argon2 = "3.0"
+rand = "0.8"
+uuid = "1.18.1"
+hyper-util = "0.1.17"
+anyhow = "1.0.100"
+rand_core = "0.9.3"
