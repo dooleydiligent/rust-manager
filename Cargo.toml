@@ -1,7 +1,7 @@
 [package]
 name = "rust-manager"
 version = "0.1.0"
-edition = "2024"   # you can also use 2021 if you prefer
+edition = "2024"
 
 [dependencies]
 axum = "0.8.6"
@@ -19,3 +19,5 @@ uuid = "1.18.1"
 hyper-util = "0.1.17"
 anyhow = "1.0.100"
 rand_core = "0.9.3"
+virt = "0.4"
+dioxus-free-icons = "0.9.0"

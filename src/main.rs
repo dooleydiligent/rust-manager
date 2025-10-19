@@ -15,6 +15,9 @@ use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
 use sqlx::{SqlitePool, sqlite::SqliteConnectOptions, sqlite::SqlitePoolOptions};
 use std::net::SocketAddr;
+
+mod api;
+mod wizard;
 /// User record – only the fields we need for authentication
 #[derive(Debug, Clone, Serialize, sqlx::FromRow)]
 struct User {
@@ -44,6 +47,19 @@ async fn main() -> anyhow::Result<()> {
         .await?;
     init_db(&pool).await?;
 
+    // Create table if not exists
+    sqlx::query(
+        r#"
+        CREATE TABLE IF NOT EXISTS session (
+            session_id TEXT PRIMARY KEY,
+            data BLOB NOT NULL,
+            expires_at INTEGER NOT NULL
+        );
+        "#,
+    )
+    .execute(&pool)
+    .await?;
+
     // 2️⃣  Generate a random 32‑byte key for axum_session
     let mut key_bytes = [0u8; 32];
     OsRng.fill_bytes(&mut key_bytes);
@@ -61,8 +77,15 @@ async fn main() -> anyhow::Result<()> {
         .route("/login", get(login_page).post(login_action))
         .route("/dashboard", get(dashboard))
         .route("/logout", post(logout))
+        .route("/api/domains", get(api::get_domains))
+        .route(
+            "/wizard/example",
+            get(wizard::wizard_get).post(wizard::wizard_post),
+        )
         .with_state(pool.clone())
         .layer(SessionLayer::new(session_store));
+    // Register the wizard routes
+    // .merge(crate::wizard::add_wizard_routes(Router::new()));
 
     // 4️⃣  Run
     let addr = SocketAddr::from(([0, 0, 0, 0], 3302));
@@ -126,7 +149,7 @@ async fn root(
             // axum::response::AppendHeaders([("location", "/landing")]),
             Html(
                 r#"
-                <html><head><title>Rust Manager</title></head><body>
+                <html><head><title>Rust Manager</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@latest/css/pico.min.css"></head><body>
                 <h1>Welcome to rust-manager</h1>
                 <p><a href="/login">Login</a></p>
                 </body></html>
@@ -137,23 +160,11 @@ async fn root(
     }
 }
 
-/// Simple landing page with a link to the login form
-// async fn landing_page() -> Html<&'static str> {
-//     Html(
-//         r#"
-//         <html><head><title>Rust Manager</title></head><body>
-//         <h1>Welcome to rust-manager</h1>
-//         <p><a href="/login">Login</a></p>
-//         </body></html>
-//         "#,
-//     )
-// }
-
 // The login form (GET)
 async fn login_page() -> Html<&'static str> {
     Html(
         r#"
-        <html><head><title>Login</title></head><body>
+        <html><head><title>Login</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@latest/css/pico.min.css"></head><body>
         <h2>Login</h2>
         <form action="/login" method="post">
             <label>Username: <input name="username" /></label><br/>
@@ -213,7 +224,7 @@ async fn login_action(
         StatusCode::OK,
         Html(format!(
             r#"
-        <html><head><title>Login</title></head><body>
+        <html><head><title>Login</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@latest/css/pico.min.css"></head><body>
         <h2>Login</h2>
         <p style="color:red;">Invalid username or password</p>
         <form action="/login" method="post">
@@ -257,7 +268,8 @@ async fn dashboard(
         StatusCode::OK,
         Html(format!(
             r#"
-        <html><head><title>Dashboard</title></head><body>
+        <html><head><title>Dashboard</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@latest/css/pico.min.css"></head><body>
         <h1>Welcome, {username}!</h1>
         <p>This is your Rust‑Manager dashboard.</p>
         <form action="/logout" method="post"><button type="submit">Logout</button></form>
