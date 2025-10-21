@@ -1,3 +1,8 @@
+mod api;
+mod dashboard;
+
+mod wizard;
+
 use argon2::{self, Config};
 use axum::{
     Router,
@@ -16,8 +21,6 @@ use serde::{Deserialize, Serialize};
 use sqlx::{SqlitePool, sqlite::SqliteConnectOptions, sqlite::SqlitePoolOptions};
 use std::net::SocketAddr;
 
-mod api;
-mod wizard;
 /// User record – only the fields we need for authentication
 #[derive(Debug, Clone, Serialize, sqlx::FromRow)]
 struct User {
@@ -75,7 +78,7 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new()
         .route("/", get(root))
         .route("/login", get(login_page).post(login_action))
-        .route("/dashboard", get(dashboard))
+        .route("/dashboard", get(dashboard::dashboard_page))
         .route("/logout", post(logout))
         .route("/api/domains", get(api::get_domains))
         .route(
@@ -239,44 +242,45 @@ async fn login_action(
         .into_response();
 }
 
-/// Dashboard – only shown to authenticated users
-async fn dashboard(
-    session: Session<SessionSqlitePool>,
-    State(pool): State<SqlitePool>,
-) -> impl IntoResponse {
-    // Get user id from session
-    let user_id = match session.get::<i64>("user_id") {
-        Some(id) => id,
-        None => {
-            return (
-                StatusCode::FOUND,
-                axum::response::AppendHeaders([("location", "/login")]),
-            )
-                .into_response();
-        }
-    };
+// Dashboard – only shown to authenticated users
+// async fn dashboard(
+//     session: Session<SessionSqlitePool>,
+//     State(pool): State<SqlitePool>,
+// ) -> impl IntoResponse {
+//     // Get user id from session
+//     let user_id = match session.get::<i64>("user_id") {
+//         Some(id) => id,
+//         None => {
+//             return (
+//                 StatusCode::FOUND,
+//                 axum::response::AppendHeaders([("location", "/login")]),
+//             )
+//                 .into_response();
+//         }
+//     };
 
-    // Get username for display
-    let user: User = sqlx::query_as("SELECT id, username, password_hash FROM users WHERE id = ?")
-        .bind(user_id)
-        .fetch_one(&pool)
-        .await
-        .unwrap();
+//     // Get username for display
+//     let user: User = sqlx::query_as("SELECT id, username, password_hash FROM users WHERE id = ?")
+//         .bind(user_id)
+//         .fetch_one(&pool)
+//         .await
+//         .unwrap();
 
-    // Render a very simple dashboard
-    return (
-        StatusCode::OK,
-        Html(format!(
-            r#"
-        <html><head><title>Dashboard</title>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@latest/css/pico.min.css"></head><body>
-        <h1>Welcome, {username}!</h1>
-        <p>This is your Rust‑Manager dashboard.</p>
-        <form action="/logout" method="post"><button type="submit">Logout</button></form>
-        </body></html>
-        "#,
-            username = user.username
-        )),
-    )
-        .into_response();
-}
+//     // Render a very simple dashboard
+
+//     return (
+//         StatusCode::OK,
+//         Html(format!(
+//             r#"
+//         <html><head><title>Dashboard</title>
+//         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@latest/css/pico.min.css"></head><body>
+//         <h1>Welcome, {username}!</h1>
+//         <p>This is your Rust‑Manager dashboard.</p>
+//         <form action="/logout" method="post"><button type="submit">Logout</button></form>
+//         </body></html>
+//         "#,
+//             username = user.username
+//         )),
+//     )
+//         .into_response();
+// }
