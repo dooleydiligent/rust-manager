@@ -1,0 +1,29 @@
+[application]
+
+[web]
+style-build-dir = "assets"
+style-build-file = "tailwind.css"
+
+[web.style]
+input = "./input.css"
+
+[web.app]
+
+# HTML title tag content
+title = "auth"
+
+# include `assets` in web platform
+[web.resource]
+
+# Additional CSS style files
+style = []
+
+# Additional JavaScript files
+script = []
+
+[web.resource.dev]
+
+# Javascript code file
+# serve: [dev-server] only
+script = []
+

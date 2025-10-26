@@ -1,27 +1,46 @@
 [package]
-name = "rust-manager"
+name = "auth"
 version = "0.1.0"
-edition = "2024"
+authors = ["mike"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-axum = "0.8.6"
-hyper = "1.7.0"
-dioxus = { version = "0.6.2", features = ["web", "ssr", "html"] }
-axum_session = { version = "0.17", features = ["key-store"] }
-axum_session_sqlx = { version = "0.6.0", features = ["sqlite", "tls-rustls"]}
-sqlx = { version = "0.8", features = ["sqlite", "runtime-tokio-native-tls"] }
-tokio = { version = "1",  default-features = false }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-rust-argon2 = "3.0"
-rand = "0.8"
-uuid = "1.18.1"
-hyper-util = "0.1.17"
-anyhow = "1.0.100"
-rand_core = "0.9.3"
-virt = "0.4.3"
-dioxus-ssr = "0.6.2"
-libvirt = "0.1.0"
+dioxus = { version = "0.6.2", features = ["router", "fullstack"  ] }
 
-[dev-dependencies]
-cargo-watch = "8.5.3"
+tokio = { version = "1.20.0", features = ["full"], optional = true }
+
+sqlx = { version="0.7.0", features = [ "sqlite", "runtime-tokio", "tls-native-tls" ], optional = true }
+
+axum_session = {version = "0.12.1", features = ["sqlite-rustls"], optional = true  }
+axum_session_auth = { version = "0.12.1", features = ["sqlite-rustls"], optional = true  }
+axum = {version = "0.7.0", optional = true}
+
+bcrypt = {version = "0.16.0", optional = true }
+async-trait = {version = "0.1.87", optional = true  }
+anyhow = {version = "1.0.97", optional = true }
+
+
+tracing = "0.1" 
+wasm-bindgen = "0.2.104"
+
+[features]
+default = []
+web = ["dioxus/web"]
+desktop = ["dioxus/desktop"]
+mobile = ["dioxus/mobile"]
+server = ["dioxus/server", "dep:tokio" , "sqlx", "axum_session", "axum_session_auth" , "axum", "bcrypt", "async-trait", "anyhow"]
+
+[profile]
+
+[profile.wasm-dev]
+inherits = "dev"
+opt-level = 1
+
+[profile.server-dev]
+inherits = "dev"
+
+[profile.android-dev]
+inherits = "dev"
+

@@ -1,11 +1,15 @@
+#[cfg(feature="server")]
 use axum::{Json, http::StatusCode};
+#[cfg(feature="server")]
 use serde::Serialize;
+#[cfg(feature="server")]
 use virt::connect::Connect;
 
 // use virt::domain::DomainFlag; // DomainFlag is also likely in the `domain` module
 // ---------------------------------------------------------------------
 // Domain information returned as JSON
 // ---------------------------------------------------------------------
+#[cfg(feature="server")]
 #[derive(Serialize)]
 pub struct DomainInfo {
     name: String,
@@ -20,6 +24,7 @@ pub struct DomainInfo {
 // ---------------------------------------------------------------------
 // GET /api/domains – query libvirt for all domains
 // ---------------------------------------------------------------------
+#[cfg(feature="server")]
 pub async fn get_domains() -> Result<Json<Vec<DomainInfo>>, (StatusCode, String)> {
     // 1. Open a connection to the local hypervisor (qemu)
     let conn = Connect::open(Some("qemu:///system"))
