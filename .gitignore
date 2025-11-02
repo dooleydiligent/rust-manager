@@ -8,3 +8,5 @@
 ./server
 db.sqlite
 node_modules
+.vscode
+Cargo.lock

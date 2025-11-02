@@ -21,7 +21,7 @@ pub fn Login() -> Element {
           }
           div { class: "grid grid-cols-2 gap-0",
             div { class: "bg-blue-200 p-4 text-lg py-5", "username: " },
-            div { class: "bg-blue-200 p-5 text-lg py-5", 
+            div { class: "bg-blue-200 p-5 text-lg py-5",
               input {
                 class: "w-3xs rounded-lg px-1 py-1",
                 autofocus: "true",
@@ -35,7 +35,7 @@ pub fn Login() -> Element {
             div { class: "bg-blue-200 p-4 text-lg py-5", "password: " },
             div { class: "bg-blue-200 p-5 text-lg py-5",
               input {
-                class: "w-full rounded-lg px-2 py-1",
+                class: "w-3xs rounded-lg px-1 py-1",
                 r#type: "password",
                 value: password,
                 oninput: move |e| password.set(e.value()),
