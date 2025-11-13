@@ -1,4 +1,7 @@
-use crate::{backend::server_functions::log_out, Route};
+use crate::{
+    backend::server_functions::{is_authenticated, log_out},
+    Route,
+};
 use dioxus::prelude::*;
 use tracing::info;
 #[component]
@@ -14,6 +17,23 @@ pub fn Dashboard() -> Element {
 
     // Signal that tells us whether the wizard should be shown
     let mut current_route = use_signal(|| None::<String>);
+    let navigator = use_navigator();
+
+    // Check authentication on mount and redirect to login if not authenticated
+    let mut is_authed = use_signal(|| None::<bool>);
+    let _ = use_resource(move || async move {
+        match is_authenticated().await {
+            Ok(v) => is_authed.set(Some(v)),
+            Err(_) => is_authed.set(Some(false)),
+        }
+    });
+
+    // If we have a determined auth state and it's false, redirect to Login
+    if let Some(auth) = is_authed() {
+        if auth == false {
+            navigator.push(Route::Login {});
+        }
+    }
 
     // -------------------------------------------------------------
     // Icons (Unicode placeholders)

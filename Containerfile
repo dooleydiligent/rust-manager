@@ -22,6 +22,6 @@ ENV IP=0.0.0.0
 EXPOSE 8080
 
 #WORKDIR /opt/target/dx/dummy-build-repro/release/web
-ENTRYPOINT ["./server"]
+ENTRYPOINT ["./rust-manager"]
 
 

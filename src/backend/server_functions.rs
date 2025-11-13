@@ -1,6 +1,7 @@
 #[cfg(feature = "server")]
 use super::domain::server::get_domains;
 use dioxus_fullstack::prelude::*;
+#[cfg(feature = "server")]
 use tracing::info;
 
 #[cfg(feature = "server")]
@@ -90,17 +91,23 @@ pub async fn get_user() -> Result<String, ServerFnError> {
     }
 }
 #[server]
+pub async fn is_authenticated() -> Result<bool, ServerFnError> {
+    let auth_session = get_auth_session().await?;
+    Ok(auth_session.is_authenticated())
+}
+
+#[server]
 pub async fn get_domain() -> Result<String, ServerFnError> {
     #[cfg(feature = "server")]
+    info!("Fetching domain info...");
     {
-        let auth_session = get_auth_session().await?;
-        if auth_session.is_authenticated() {
+        if is_authenticated().await? {
             match get_domains().await {
                 Ok(domains) => Ok(serde_json::to_string(&domains.0)?),
                 Err((status, msg)) => Err(ServerFnError::new(format!("{}: {}", status, msg))),
             }
         } else {
-            Err(ServerFnError::new("You are not Authorized!".to_string()))
+            Err(ServerFnError::new("Not Authorized!".to_string()))
         }
     }
     #[cfg(not(feature = "server"))]

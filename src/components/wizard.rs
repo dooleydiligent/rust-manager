@@ -42,7 +42,7 @@ pub fn WizardExample() -> Element {
     // let _router = use_router(); // keep router alive for future navigation
 
     // Validation helpers
-    let mut is_step1_valid = !state().name.is_empty();
+    let is_step1_valid = !state().name.is_empty();
     let is_step2_valid = state().number.is_some();
     let is_step3_valid = state().color.is_some();
     let is_step4_valid = state().date.is_some();
@@ -51,7 +51,7 @@ pub fn WizardExample() -> Element {
     //     step(),
     //     state()
     // );
-    let mut forward_disabled = match step() {
+    let forward_disabled = match step() {
         1 => !is_step1_valid,
         2 => !is_step2_valid,
         3 => !is_step3_valid,
@@ -89,8 +89,8 @@ pub fn WizardExample() -> Element {
                         value: "{state().name}",
                         oninput: move |e| {
                           state.write().name = e.value().clone();
-                          is_step1_valid = !state().name.is_empty();
-                          forward_disabled = is_step1_valid;
+                          // is_step1_valid = !state().name.is_empty();
+                          // forward_disabled = is_step1_valid;
                           // info!("name is now {}, valid: {}", state().name, is_step1_valid);
                         },
                     }
