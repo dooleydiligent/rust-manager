@@ -44,7 +44,7 @@ pub fn router(
 
     Router::new()
         .serve_dioxus_application(config, app)
-        .route("/wizard/submit", post(wizard_submit)) 
+        .route("/wizard/submit", post(wizard_submit))
         .layer(
             AuthSessionLayer::<User, i64, SessionSqlitePool, SqlitePool>::new(Some(pool))
                 .with_config(auth_config),

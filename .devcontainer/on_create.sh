@@ -1,77 +1,75 @@
-#!/bin/bash 
-set -euo pipefail
+#!/bin/bash
+# Podman Dev Container Post-Create Hook for Dioxus Fullstack
+# This script runs automatically after the container is created.
+# It installs Rust development tools, Dioxus CLI, and Tailwind CSS.
+# Compatible with Podman rootless and root modes.
+
+set -e
 export DEBIAN_FRONTEND=noninteractive
 
-apt update -y && apt upgrade -y 
+echo "=== Updating package lists ==="
+apt-get update -qq
 
-apt install -y \
-  libvirt-daemon-system \
-  libvirt-clients \
-  qemu-kvm \
-  qemu-system \
-  libvirt-dev \
-  virt-manager \
+echo "=== Installing minimal dependencies for Dioxus development ==="
+apt-get install -y --no-install-recommends \
   ca-certificates \
+  pkg-config \
   curl \
-  procps
+  procps \
+  libvirt-dev \
+  build-essential \
+  npm \
+  nodejs
+echo "=== Installing wasm-pack ==="
+cargo install -f wasm-pack
 
-# Ensure libvirt group exists and add the current user (root or dev user)
-if getent group libvirt >/dev/null; then
-  echo "libvirt group exists"
-else
-  groupadd -r libvirt || true
-fi
+echo "=== Installing cargo-binstall ==="
+cargo install cargo-binstall --quiet
 
-if id -u "${USER:-root}" >/dev/null 2>&1; then
-  usermod -aG libvirt "${USER:-root}" || true
-fi
+echo "=== Installing dioxus-cli ==="
+cargo binstall dioxus-cli -y
 
-# Ensure /var/run/libvirt exists
-mkdir -p /var/run/libvirt
-chown root:libvirt /var/run/libvirt || true
-chmod 0775 /var/run/libvirt || true
+echo "=== Pre-fetching cargo dependencies ==="
+cargo fetch --quiet
 
+rustup component add rustfmt # rust-src  clippy
 
-# Try to start libvirtd. If systemd is present use systemctl, otherwise run libvirtd directly.
-if command -v systemctl >/dev/null 2>&1 && pidof systemd >/dev/null 2>&1; then
-  echo "Starting libvirtd via systemctl"
-  systemctl enable --now libvirtd || true
-else
-  echo "No systemd detected — starting libvirtd in background"
-  if [ -x /usr/sbin/libvirtd ]; then
-    # redirect logs so process keeps running in background
-    nohup /usr/sbin/libvirtd >/var/log/libvirtd.log 2>&1 &
-    sleep 1
+echo "=== Installing Tailwind CSS ==="
+# Ensure node is available. Prefer nvm if installed, otherwise fall back to apt's nodejs/npm
+if ! command -v node >/dev/null 2>&1; then
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+  if command -v nvm >/dev/null 2>&1; then
+    nvm install node || true
   else
-    echo "Warning: /usr/sbin/libvirtd not found"
+    apt update -y && apt install -y nodejs npm || true
   fi
 fi
 
-# Adjust /dev/kvm permissions (host must have exposed it via runArgs)
-if [ -e /dev/kvm ]; then
-  chgrp kvm /dev/kvm 2>/dev/null || true
-  chmod g+rw /dev/kvm 2>/dev/null || true
+# Install Tailwind and its CLI locally in the workspace so the CLI can always find the package
+npm install --no-audit --no-fund @tailwindcss/cli tailwindcss --prefix . || true
+
+echo "=== Generating Tailwind CSS ==="
+if [ -f ./input.css ]; then
+if [ -x ./node_modules/.bin/tailwindcss ]; then
+  ./node_modules/.bin/tailwindcss -i ./input.css -o ./assets/tailwind.css
+else
+  # fallback to npx (global CLI) if present
+  npx tailwindcss -i ./input.css -o ./assets/tailwind.css || true
+fi
+  echo "✓ Tailwind CSS generated"
+else
+  echo "⚠ input.css not found, skipping Tailwind generation"
 fi
 
-
-# && npx tailwindcss -i ./input.css -o ./assets/tailwind.css
-cargo install cargo-binstall
-cargo binstall dioxus-cli --version 0.6.3 -y
-cargo fetch
-
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-nvm install node
-npm i -g @tailwindcss/cli && npm i tailwindcss 
-
-echo "Initializing tailwindcss"
-npx tailwindcss -i ./input.css -o ./assets/tailwind.css
-
-echo "Watch with:"
-echo "npx tailwindcss -i ./input.css -o ./assets/tailwind.css -w"
-
-echo "Building the project"
-dx bundle --platform web
-echo "Watch with:"
-echo "dx serve --platform web"
+echo "building"
+cargo build 
+echo ""
+echo "=== Setup complete ==="
+echo "Container ready for Dioxus development!"
+echo ""
+echo "Available commands:"
+echo "  dx serve --platform web      — Start dev server with live reload"
+echo "  dx build --platform web      — Build for web"
+echo "  cargo test                   — Run Rust tests"
+echo "  npm run build:css            — Build Tailwind CSS"

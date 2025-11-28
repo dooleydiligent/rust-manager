@@ -1,45 +1,28 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/rust
 {
-  "name": "Rust",
-  //   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-  "image": "rust:1.90",
-  //   // Use 'mounts' to make the cargo cache persistent in a Docker Volume.
-  //   // "mounts": [
-  //   // 	{
-  //   // 		"source": "devcontainer-cargo-cache-${devcontainerId}",
-  //   // 		"target": "/usr/local/cargo",
-  //   // 		"type": "volume"
-  //   // 	}
-  //   // ]
-  // Features to add to the dev container. More info: https://containers.dev/features.
-  //  "features": {
-  //    "ghcr.io/r3dpoint/devcontainer-features/tailwindcss-standalone-cli:1": {}
-  //  },
-  //   // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  //   // "forwardPorts": [],
-  //   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "sh -e /workspaces/rust/.devcontainer/on_create.sh",
-  //   // Configure tool-specific properties.
-  //   // "customizations": {},
-  //   // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-  //   "remoteUser": "root",
-  //   "remoteEnv": {
-  //     "MY_REMOTE_VARIABLE": "some-value-here",
-  //     "ANOTHER_VAR": "${localEnv:SOME_LOCAL_VARIABLE}"
-  //   }
-  "runArgs": [
-    // expose the host KVM device to the container
-    "--device",
-    "/dev/kvm:/dev/kvm",
-    // give SYS_ADMIN so libvirt/qemu can do necessary operations
-    "--cap-add=SYS_ADMIN",
-    // relax AppArmor if present (optional but often needed)
-    "--security-opt",
-    "apparmor=unconfined"
+  "name": "Dioxus Fullstack (Podman-optimized)",
+  "image": "docker.io/library/rust:1.90-trixie",
+  "remoteUser": "root",
+  "postCreateCommand": "sh -e .devcontainer/on_create.sh",
+  "forwardPorts": [
+    3000,
+    8000,
+    8080
   ],
-  "containerEnv": {
-    // makes some libvirt tools default to system URI
-    "LIBVIRT_DEFAULT_URI": "qemu:///system"
-  }
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "rust-lang.rust-analyzer",
+        "vadimcn.vscode-lldb",
+        "bradlc.vscode-tailwindcss"
+      ]
+    }
+  },
+  "runArgs": [],
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolder},target=/workspaces/${localWorkspaceFolderBasename},type=bind,consistency=cached",
+  "mounts": [
+    "source=dioxus-cargo-cache,target=/usr/local/cargo,type=volume",
+    "source=/var/run/libvirt/libvirt-sock,target=/var/run/libvirt/libvirt-sock,type=bind,consistency=cached"
+  ]
 }
